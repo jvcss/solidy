@@ -13,14 +13,13 @@ x-op-image: &image
 x-op-app: &app
   <<: [*image, *restart_policy]
   environment:
-
-    OPENPROJECT_HTTPS: "${OPENPROJECT_HTTPS:-false}"
-    OPENPROJECT_HOST__NAME: "${OPENPROJECT_HOST__NAME:-localhost:4000}"
-    OPENPROJECT_HSTS: "${OPENPROJECT_HSTS:-false}"
+    OPENPROJECT_HTTPS: "${OPENPROJECT_HTTPS:-true}"
+    OPENPROJECT_HOST__NAME: "${OPENPROJECT_HOST__NAME:-localhost:8080}"
+    OPENPROJECT_HSTS: "${OPENPROJECT_HSTS:-true}"
     RAILS_CACHE_STORE: "memcache"
     OPENPROJECT_CACHE__MEMCACHE__SERVER: "cache:11211"
     OPENPROJECT_RAILS__RELATIVE__URL__ROOT: "${OPENPROJECT_RAILS__RELATIVE__URL__ROOT:-}"
-    DATABASE_URL: "${DATABASE_URL:-postgres://postgres:${PASS}/openproject?pool=20&encoding=unicode&reconnect=true}"
+    DATABASE_URL: "${DATABASE_URL:-postgres://postgres:p4ssw0rd@db/openproject?pool=20&encoding=unicode&reconnect=true}"
     RAILS_MIN_THREADS: ${RAILS_MIN_THREADS:-4}
     RAILS_MAX_THREADS: ${RAILS_MAX_THREADS:-16}
     # set to true to enable the email receiving feature. See ./docker/cron for more options
@@ -35,8 +34,6 @@ services:
     stop_grace_period: "3s"
     volumes:
       - "${PGDATA:-pgdata}:/var/lib/postgresql/data"
-    ports:
-      - "5432:5432"
     environment:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-p4ssw0rd}
       POSTGRES_DB: openproject
@@ -50,20 +47,16 @@ services:
       - backend
 
   proxy:
-    environment:
-        EMAIL_HOST_ENV: "${EMAIL_HOST}"   # Variável de ambiente usada no Dockerfile
     build:
       context: ./proxy
       args:
         APP_HOST: web
-        EMAIL_HOST: "${EMAIL_HOST}"
     image: openproject/proxy
     <<: *restart_policy
+    ports:
+      - "${PORT:-8080}:80"
     depends_on:
       - web
-    ports:
-      - "${PORTSSL}:443"
-      - "${PORT}:80"
     networks:
       - frontend
 
@@ -80,7 +73,7 @@ services:
     labels:
       - autoheal=true
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://proxy/health_checks/default"]
+      test: ["CMD", "curl", "-f", "http://localhost:8080${OPENPROJECT_RAILS__RELATIVE__URL__ROOT:-}/health_checks/default"]
       interval: 10s
       timeout: 3s
       retries: 3
