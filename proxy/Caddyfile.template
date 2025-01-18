@@ -1,28 +1,10 @@
-# Configuração para o Caddyfile
-
-# Escuta na porta 80 (HTTP) e 443 (HTTPS)
-:80, :443 {
-    # Habilitação do HTTPS
-    tls ${EMAIL_HOST}  # Use seu e-mail para Caddy gerar o certificado automaticamente.
-    # Trust GitHub's IP ranges (local, private network ranges as a placeholder)
-    trusted_proxies 127.0.0.1 10.0.0.0/8 192.168.0.0/16
-
-    # Configuração de proxy reverso para o seu aplicativo
-    reverse_proxy * http://${APP_HOST} {
-        
-
-        # Encaminhando os cabeçalhos X-Forwarded-*
-        header_up X-Forwarded-Proto {header.X-Forwarded-Proto}
-        header_up X-Forwarded-For {header.X-Forwarded-For}
-
-        # Configuração de load balancing (se necessário)
+:80, 443 {
+    tls ${EMAIL_HOST}  # Certificado gerado para o subdomínio.
+    reverse_proxy ${APP_HOST} {
+        header_up Host {host}
+        header_up X-Forwarded-Proto {scheme}
+        header_up X-Forwarded-For {remote}
         lb_policy round_robin
-        lb_retries 3
     }
-
-    # Arquivos estáticos (se aplicável)
-    file_server
-
-    # Logs (para debugging)
     log
 }
