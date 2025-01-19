@@ -13,6 +13,13 @@ x-op-image: &image
 x-op-app: &app
   <<: [*image, *restart_policy]
   environment:
+    SMTP_ADDRESS: "smtp.gmail.com"
+    SMTP_PORT: "587"
+    SMTP_DOMAIN: "smtp.gmail.com"
+    SMTP_USER_NAME: "${SMTP_USER_NAME:-your@gmail.com}"
+    SMTP_PASSWORD: "${SMTP_PASSWORD:-password}"
+    SMTP_AUTHENTICATION: "plain"
+
     OPENPROJECT_HTTPS: "${OPENPROJECT_HTTPS:-true}"
     OPENPROJECT_HOST__NAME: "${OPENPROJECT_HOST__NAME:-localhost:8080}"
     OPENPROJECT_HSTS: "${OPENPROJECT_HSTS:-true}"
